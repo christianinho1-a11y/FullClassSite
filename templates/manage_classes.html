@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Class Management</h2>
+<div class="card p-3 mb-3">
+  <h5>Create Class</h5>
+  <form method="post" class="row g-2">
+    <input type="hidden" name="action" value="create">
+    <div class="col-md-3"><input name="name" class="form-control" placeholder="Class Name" required></div>
+    <div class="col-md-2"><input name="slug" class="form-control" placeholder="Slug" required></div>
+    <div class="col-md-4"><input name="description" class="form-control" placeholder="Description" required></div>
+    <div class="col-md-2"><input type="color" name="color" class="form-control form-control-color" value="#4f46e5"></div>
+    <div class="col-md-1"><button class="btn btn-info">Add</button></div>
+  </form>
+</div>
+<table class="table table-dark table-striped rounded overflow-hidden">
+  <thead><tr><th>Name</th><th>Students</th><th>Status</th><th>Actions</th></tr></thead>
+  <tbody>
+    {% for class in classes %}
+      <tr>
+        <td>{{ class.name }}</td>
+        <td>{{ class.enrollments|length }}</td>
+        <td>{% if class.archived %}Archived{% else %}Active{% endif %}</td>
+        <td class="d-flex gap-2">
+          <form method="post"><input type="hidden" name="action" value="archive"><input type="hidden" name="class_id" value="{{ class.id }}"><button class="btn btn-sm btn-outline-warning">Archive</button></form>
+          <form method="post"><input type="hidden" name="action" value="duplicate"><input type="hidden" name="class_id" value="{{ class.id }}"><button class="btn btn-sm btn-outline-info">Duplicate</button></form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block auth_content %}
+<section class="landing-wrap">
+  <div class="login-card">
+    <h2>Portal Sign In</h2>
+    <p class="text-muted">Student and teacher access</p>
+    <form method="post" class="d-grid gap-3 mt-3">
+      <input class="form-control" name="username" placeholder="Username" required>
+      <input type="password" class="form-control" name="password" placeholder="Password" required>
+      <button class="btn btn-info">Sign In</button>
+      <a href="{{ url_for('index') }}" class="small text-info">Back to landing page</a>
+    </form>
+    <hr>
+    <small>Teacher demo: <strong>teacher</strong> / TeachSecure!2026<br>Student demo password: StudentPass!123</small>
+  </div>
+</section>
+{% endblock %}

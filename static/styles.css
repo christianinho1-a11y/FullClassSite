@@ -1,0 +1,77 @@
+:root {
+  --bg: #0b1220;
+  --panel: rgba(20, 30, 50, 0.65);
+  --text: #e2e8f0;
+  --muted: #9aa7ba;
+  --border: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="light"] {
+  --bg: #f3f6fb;
+  --panel: rgba(255, 255, 255, 0.92);
+  --text: #0f172a;
+  --muted: #5b6474;
+  --border: rgba(15, 23, 42, 0.1);
+}
+
+body {
+  min-height: 100vh;
+  color: var(--text);
+  background: radial-gradient(circle at 20% 0%, #152238 0%, #0b1220 45%, #070b14 100%);
+}
+
+.sidebar {
+  width: 250px;
+  min-height: 100vh;
+  background: rgba(10, 16, 30, 0.95);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+}
+
+.main-content { width: calc(100% - 250px); }
+.nav-link { color: #94a3b8; border-radius: 10px; }
+.nav-link:hover { color: #22d3ee; background: rgba(34, 211, 238, 0.1); }
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  backdrop-filter: blur(8px);
+  color: var(--text);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.3);
+}
+
+.class-card:hover, .stat:hover { transform: translateY(-2px); transition: 0.2s ease; }
+.announcement-item { border-bottom: 1px solid var(--border); padding: 0.5rem 0; }
+
+.form-control, .form-select {
+  background: rgba(15, 23, 42, 0.4);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.landing-wrap {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+.hero-card, .login-card {
+  max-width: 760px;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 50px rgba(3, 8, 20, 0.5);
+}
+.eyebrow { text-transform: uppercase; letter-spacing: .12em; color: #22d3ee; }
+.lead { color: var(--muted); }
+.avatar { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; background:#1e293b; margin-right:6px; }
+
+@media (max-width: 900px) {
+  .app-shell { flex-direction: column; }
+  .sidebar { width: 100%; min-height: auto; position: static; }
+  .main-content { width: 100%; }
+}

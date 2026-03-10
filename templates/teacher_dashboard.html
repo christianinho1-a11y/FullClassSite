@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-1">Teacher Command Center</h2>
+<p class="text-muted">Overview of class activity, missing work, and upcoming deadlines.</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3"><div class="card p-3 stat"><small>Total Students</small><h3>{{ total_students }}</h3></div></div>
+  <div class="col-md-3"><div class="card p-3 stat"><small>Active Classes</small><h3>{{ classes|selectattr('archived', 'equalto', False)|list|length }}</h3></div></div>
+  <div class="col-md-3"><div class="card p-3 stat"><small>Due This Week</small><h3>{{ assignments_due_week }}</h3></div></div>
+  <div class="col-md-3"><div class="card p-3 stat"><small>Students Missing Work</small><h3>{{ students_missing }}</h3></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+{% for class in classes %}
+<div class="col-lg-4 col-md-6">
+  <div class="card class-card p-3" style="border-left: 4px solid {{ class.color }};">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="mb-1">{{ class.name }}</h5>
+      {% if class.archived %}<span class="badge text-bg-secondary">Archived</span>{% endif %}
+    </div>
+    <p class="small text-muted">{{ class.description }}</p>
+    <p class="small mb-2">{{ roster_counts[class.id] }} students enrolled</p>
+    <a class="btn btn-sm btn-info" href="{{ url_for('class_portal', slug=class.slug) }}">Open Class Portal</a>
+  </div>
+</div>
+{% endfor %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card p-3">
+      <h5>Quick Actions</h5>
+      <ul class="small m-0">
+        <li>Add/edit/remove students</li><li>Bulk import and class move</li><li>Create announcements and pin priority posts</li>
+        <li>Duplicate assignments across classes</li><li>Override, late, missing, excused grade flags</li>
+        <li>Attendance and behavior note placeholders</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card p-3">
+      <h5>Recent Announcements</h5>
+      {% for item in activity %}
+      <div class="border-bottom py-2">
+        <strong>{{ item.title }}</strong>
+        <small class="text-muted d-block">{{ item.classroom.name }} • {{ item.created_at.strftime('%b %d %I:%M %p') }}</small>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card p-3">
+      <h5>Recent Grade Updates</h5>
+      {% for item in recent_submissions %}
+      <div class="border-bottom py-2 small">
+        <strong>{{ item.student.full_name }}</strong>
+        <div>{{ item.assignment.title }} — {{ item.score }}/{{ item.max_score }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
