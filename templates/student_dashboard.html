@@ -1,21 +1,21 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Welcome, {{ current_user.full_name }}</h2>
-<p class="text-muted">Your learning dashboard with classes, due work, and progress.</p>
+<h2 class="mb-1">Welcome, {{ current_user.full_name }}</h2>
+<p class="text-muted">Your class feed, due dates, and progress dashboard.</p>
 <div class="row g-3 mb-4">
-  <div class="col-md-4"><div class="card metric-card p-3"><h6>Enrolled Classes</h6><h3>{{ classes|length }}</h3></div></div>
-  <div class="col-md-4"><div class="card metric-card p-3"><h6>Upcoming Assignments</h6><h3>{{ upcoming|length }}</h3></div></div>
-  <div class="col-md-4"><div class="card metric-card p-3"><h6>Grade Average</h6><h3>{{ grade_summary }}%</h3></div></div>
+  <div class="col-md-4"><div class="card p-3 stat"><small>Enrolled Classes</small><h3>{{ classes|length }}</h3></div></div>
+  <div class="col-md-4"><div class="card p-3 stat"><small>Upcoming Assignments</small><h3>{{ upcoming|length }}</h3></div></div>
+  <div class="col-md-4"><div class="card p-3 stat"><small>Current Average</small><h3>{{ grade_summary }}%</h3></div></div>
 </div>
 
-<h4>Your Classes</h4>
+<h4>Your Courses</h4>
 <div class="row g-3 mb-4">
 {% for class in classes %}
-<div class="col-md-4">
+<div class="col-md-6 col-xl-4">
   <a class="text-decoration-none" href="{{ url_for('class_portal', slug=class.slug) }}">
-    <div class="card class-card p-3" style="border-left: 5px solid {{ class.color }};">
+    <div class="card class-card p-3" style="border-left: 4px solid {{ class.color }};">
       <h5>{{ class.name }}</h5>
-      <p class="text-muted">{{ class.description }}</p>
+      <p class="small text-muted">{{ class.description }}</p>
     </div>
   </a>
 </div>
@@ -28,24 +28,24 @@
       <h5>Recent Announcements</h5>
       {% for a in announcements %}
       <div class="announcement-item">
-        <strong>{{ a.title }}</strong>
-        <small class="text-muted d-block">{{ a.classroom.name }} • {{ a.created_at.strftime('%b %d, %Y %I:%M %p') }}</small>
+        <strong>{{ a.title }} {% if a.pinned %}<span class="badge text-bg-info">Pinned</span>{% endif %}</strong>
+        <small class="text-muted d-block">{{ a.classroom.name }} • {{ a.created_at.strftime('%b %d, %I:%M %p') }}</small>
       </div>
-      {% else %}<p>No announcements yet.</p>{% endfor %}
+      {% endfor %}
     </div>
   </div>
   <div class="col-lg-6">
     <div class="card p-3">
-      <h5>Upcoming Assignments</h5>
+      <h5>Upcoming Calendar</h5>
       {% for task in upcoming %}
       <div class="d-flex justify-content-between border-bottom py-2">
         <div>
           <strong>{{ task.title }}</strong>
-          <small class="text-muted d-block">{{ task.classroom.name }}</small>
+          <small class="d-block text-muted">{{ task.classroom.name }} • {{ task.category }}</small>
         </div>
         <span class="badge text-bg-warning">Due {{ task.due_date.strftime('%b %d') }}</span>
       </div>
-      {% else %}<p>No upcoming assignments.</p>{% endfor %}
+      {% endfor %}
     </div>
   </div>
 </div>

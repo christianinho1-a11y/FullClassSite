@@ -1,32 +1,66 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Manage Students</h2>
-<div class="card p-3 mb-3">
-  <form method="post" class="row g-2">
-    <div class="col-md-4"><input name="full_name" class="form-control" placeholder="Full Name" required></div>
-    <div class="col-md-3"><input name="username" class="form-control" placeholder="Username" required></div>
-    <div class="col-md-3"><input name="password" class="form-control" placeholder="Temporary Password" required></div>
-    <div class="col-md-2"><button class="btn btn-primary">Add Student</button></div>
-  </form>
+<h2>Student Management</h2>
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <h5>Add Student</h5>
+      <form method="post" class="row g-2">
+        <input type="hidden" name="action" value="add">
+        <div class="col-md-6"><input name="full_name" class="form-control" placeholder="Full Name" required></div>
+        <div class="col-md-6"><input name="username" class="form-control" placeholder="username" required></div>
+        <div class="col-md-4"><input name="student_code" class="form-control" placeholder="Student ID"></div>
+        <div class="col-md-4"><select name="status" class="form-select"><option>active</option><option>missing work</option><option>excused</option><option>at risk</option></select></div>
+        <div class="col-md-4"><input name="password" class="form-control" placeholder="Temp Password" required></div>
+        <div class="col-12"><button class="btn btn-info">Create Student</button></div>
+      </form>
+      <hr>
+      <h6>Bulk Import (CSV lines)</h6>
+      <form method="post" class="d-grid gap-2">
+        <input type="hidden" name="action" value="bulk_import">
+        <textarea name="bulk_data" class="form-control" rows="5" placeholder="Full Name,username,status"></textarea>
+        <button class="btn btn-outline-info">Bulk Import</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <h5>Teacher Notes</h5>
+      {% for note in notes %}
+      <div class="border-bottom py-2 small">Student #{{ note.student_id }} — {{ note.note }}</div>
+      {% else %}
+      <p class="text-muted">No notes yet.</p>
+      {% endfor %}
+    </div>
+  </div>
 </div>
 
-<div class="card p-3">
-  <h5>Student Roster & Enrollment</h5>
-  <table class="table table-striped">
-    <thead><tr><th>Student</th><th>Username</th><th>Enrolled Classes</th><th>Assign Class</th></tr></thead>
+<div class="card p-3 mt-3">
+  <h5>Roster & Controls</h5>
+  <table class="table table-dark table-striped align-middle">
+    <thead><tr><th>Student</th><th>Status</th><th>Classes</th><th>Enroll / Move / Notes / Remove</th></tr></thead>
     <tbody>
       {% for s in students %}
       <tr>
-        <td>{{ s.full_name }}</td>
-        <td>{{ s.username }}</td>
-        <td>{% for en in s.enrollments %}<span class="badge text-bg-secondary">{{ en.classroom.name }}</span> {% endfor %}</td>
+        <td><span class="avatar">{{ s.avatar }}</span> {{ s.full_name }}<div class="small text-muted">{{ s.student_code }} • {{ s.username }}</div></td>
+        <td><span class="badge text-bg-secondary">{{ s.status }}</span></td>
+        <td>{% for en in s.enrollments %}<span class="badge text-bg-dark border">{{ en.classroom.slug }}</span> {% endfor %}</td>
         <td>
-          <form method="post" action="{{ url_for('enroll_student', student_id=s.id) }}" class="d-flex gap-2">
-            <select name="class_id" class="form-select form-select-sm">
-            {% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
-            </select>
-            <button class="btn btn-sm btn-primary">Enroll</button>
+          <form method="post" action="{{ url_for('enroll_student', student_id=s.id) }}" class="d-flex gap-2 mb-2">
+            <select name="class_id" class="form-select form-select-sm">{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select>
+            <button class="btn btn-sm btn-info">Enroll</button>
           </form>
+          <form method="post" action="{{ url_for('move_student', student_id=s.id) }}" class="d-flex gap-2 mb-2">
+            <select name="from_class" class="form-select form-select-sm">{% for e in s.enrollments %}<option value="{{ e.classroom.id }}">From {{ e.classroom.slug }}</option>{% endfor %}</select>
+            <select name="to_class" class="form-select form-select-sm">{% for c in classes %}<option value="{{ c.id }}">To {{ c.slug }}</option>{% endfor %}</select>
+            <button class="btn btn-sm btn-outline-info">Move</button>
+          </form>
+          <form method="post" class="d-flex gap-2 mb-2">
+            <input type="hidden" name="action" value="note"><input type="hidden" name="student_id" value="{{ s.id }}">
+            <input name="note" class="form-control form-control-sm" placeholder="Behavior/progress note">
+            <button class="btn btn-sm btn-outline-light">Save Note</button>
+          </form>
+          <form method="post" class="d-inline"><input type="hidden" name="action" value="remove"><input type="hidden" name="student_id" value="{{ s.id }}"><button class="btn btn-sm btn-outline-danger">Remove</button></form>
         </td>
       </tr>
       {% endfor %}
