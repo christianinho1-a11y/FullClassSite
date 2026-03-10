@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block auth_content %}
+<div class="auth-wrapper">
+  <div class="card login-card p-4 shadow-lg">
+    <h2>School Classroom Portal</h2>
+    <p class="text-muted">Student + Teacher Sign in</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for category, msg in messages %}<div class="alert alert-{{ category }}">{{ msg }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+    <form method="post" class="d-grid gap-3">
+      <input class="form-control" type="text" name="username" placeholder="Username" required>
+      <input class="form-control" type="password" name="password" placeholder="Password" required>
+      <button class="btn btn-primary">Login</button>
+    </form>
+    <small class="text-muted mt-3">Demo teacher: teacher / TeachSecure!2026</small>
+    <small class="text-muted">Demo student: alex.j / StudentPass!123</small>
+  </div>
+</div>
+{% endblock %}
