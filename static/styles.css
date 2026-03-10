@@ -1,0 +1,32 @@
+:root {
+  --bg: #f3f6fb;
+  --text: #1f2937;
+  --card: #ffffff;
+}
+[data-theme='dark'] {
+  --bg: #0f172a;
+  --text: #e2e8f0;
+  --card: #1e293b;
+}
+body { background: var(--bg); color: var(--text); }
+.sidebar {
+  width: 250px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1d4ed8, #1e3a8a);
+  color: #fff;
+}
+.sidebar .nav-link { color: #dbeafe; border-radius: 8px; }
+.sidebar .nav-link:hover { background: rgba(255,255,255,0.15); }
+.main-content { width: calc(100% - 250px); }
+.card, .table { background: var(--card); border: 0; border-radius: 16px; }
+.metric-card h3 { font-weight: 700; }
+.class-card { transition: all .2s ease; }
+.class-card:hover { transform: translateY(-4px); box-shadow: 0 8px 18px rgba(0,0,0,.08); }
+.announcement-item { border-bottom: 1px solid #e5e7eb; padding: 10px 0; }
+.auth-wrapper { min-height: 100vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #1d4ed8, #7c3aed); }
+.login-card { width: 100%; max-width: 420px; border-radius: 18px; }
+@media (max-width: 900px) {
+  .sidebar { width: 100px; }
+  .main-content { width: calc(100% - 100px); }
+  .sidebar h4 { font-size: 1rem; }
+}

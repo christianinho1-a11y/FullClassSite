@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ classroom.name }}</h2>
+<p class="text-muted">{{ classroom.description }}</p>
+<div class="row g-3 mb-4">
+  <div class="col-md-3"><div class="card p-3"><h6>Announcements</h6><h3>{{ announcements|length }}</h3></div></div>
+  <div class="col-md-3"><div class="card p-3"><h6>Assignments</h6><h3>{{ assignments|length }}</h3></div></div>
+  <div class="col-md-3"><div class="card p-3"><h6>Resources</h6><h3>{{ resources|length }}</h3></div></div>
+  <div class="col-md-3"><div class="card p-3"><h6>Attendance</h6><h3>Coming soon</h3></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card p-3">
+      <h5>Announcements</h5>
+      {% if current_user.role == 'teacher' %}
+      <form method="post" action="{{ url_for('add_announcement', slug=classroom.slug) }}" class="mb-3 d-grid gap-2">
+        <input class="form-control" name="title" placeholder="Title" required>
+        <textarea class="form-control" name="message" placeholder="Announcement" required></textarea>
+        <button class="btn btn-primary btn-sm">Post</button>
+      </form>
+      {% endif %}
+      {% for a in announcements %}
+      <div class="announcement-item">
+        <strong>{{ a.title }}</strong>
+        <small class="text-muted d-block">{{ a.created_at.strftime('%b %d, %Y %I:%M %p') }}</small>
+        <p>{{ a.message }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card p-3">
+      <h5>Assignments</h5>
+      {% if current_user.role == 'teacher' %}
+      <form method="post" action="{{ url_for('add_assignment', slug=classroom.slug) }}" class="mb-3 row g-2">
+        <div class="col-12"><input class="form-control" name="title" placeholder="Assignment title" required></div>
+        <div class="col-12"><textarea class="form-control" name="description" placeholder="Description" required></textarea></div>
+        <div class="col-md-4"><input type="date" class="form-control" name="due_date" required></div>
+        <div class="col-md-4"><input class="form-control" name="status" placeholder="Active"></div>
+        <div class="col-md-4"><input class="form-control" name="resource_link" placeholder="Resource link"></div>
+        <div class="col-12"><button class="btn btn-primary btn-sm">Create Assignment</button></div>
+      </form>
+      {% endif %}
+      {% for task in assignments %}
+      <div class="border-bottom py-2">
+        <strong>{{ task.title }}</strong>
+        <small class="d-block text-muted">Due {{ task.due_date }} • {{ task.status }}</small>
+        <p>{{ task.description }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-lg-6">
+    <div class="card p-3">
+      <h5>Grades</h5>
+      {% if current_user.role == 'student' %}
+        {% for assignment, grade in grade_rows %}
+          <div class="border-bottom py-2">
+            <strong>{{ assignment.title }}</strong>
+            {% if grade %}
+              <span class="badge text-bg-success">{{ ((grade.score / grade.max_score) * 100)|round(1) }}%</span>
+              <small class="d-block text-muted">{{ grade.feedback }}</small>
+            {% else %}<small class="text-muted">Not graded yet.</small>{% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        {% for assignment, grades in grade_rows %}
+          <h6 class="mt-3">{{ assignment.title }}</h6>
+          {% for grade in grades %}
+          <div class="small border rounded p-2 mb-1">
+            {{ grade.student.full_name }} — {{ grade.score }}/{{ grade.max_score }}
+          </div>
+          {% endfor %}
+          <form method="post" action="{{ url_for('set_grade', slug=classroom.slug) }}" class="row g-2 mb-2">
+            <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+            <div class="col-md-4">
+              <select name="student_id" class="form-select">
+              {% for enroll in classroom.enrollments %}<option value="{{ enroll.student.id }}">{{ enroll.student.full_name }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2"><input name="score" class="form-control" placeholder="Score"></div>
+            <div class="col-md-2"><input name="max_score" class="form-control" value="100"></div>
+            <div class="col-md-3"><input name="feedback" class="form-control" placeholder="Feedback"></div>
+            <div class="col-md-1"><button class="btn btn-sm btn-primary">Save</button></div>
+          </form>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card p-3">
+      <h5>Resources</h5>
+      {% if current_user.role == 'teacher' %}
+      <form method="post" action="{{ url_for('add_resource', slug=classroom.slug) }}" class="mb-3 row g-2">
+        <div class="col-md-5"><input class="form-control" name="title" placeholder="Resource title" required></div>
+        <div class="col-md-5"><input class="form-control" name="link" placeholder="https://..." required></div>
+        <div class="col-md-2"><button class="btn btn-primary btn-sm">Add</button></div>
+      </form>
+      {% endif %}
+      {% for r in resources %}
+      <div class="border-bottom py-2 d-flex justify-content-between">
+        <strong>{{ r.title }}</strong>
+        <a href="{{ r.link }}" target="_blank" class="btn btn-outline-primary btn-sm">Download</a>
+      </div>
+      {% endfor %}
+      <hr>
+      <h6>Messaging</h6>
+      <p class="text-muted">Contact teacher placeholder for future expansion.</p>
+      <h6>Notifications</h6>
+      <p class="text-muted">Notification center placeholder for future expansion.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

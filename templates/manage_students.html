@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Manage Students</h2>
+<div class="card p-3 mb-3">
+  <form method="post" class="row g-2">
+    <div class="col-md-4"><input name="full_name" class="form-control" placeholder="Full Name" required></div>
+    <div class="col-md-3"><input name="username" class="form-control" placeholder="Username" required></div>
+    <div class="col-md-3"><input name="password" class="form-control" placeholder="Temporary Password" required></div>
+    <div class="col-md-2"><button class="btn btn-primary">Add Student</button></div>
+  </form>
+</div>
+
+<div class="card p-3">
+  <h5>Student Roster & Enrollment</h5>
+  <table class="table table-striped">
+    <thead><tr><th>Student</th><th>Username</th><th>Enrolled Classes</th><th>Assign Class</th></tr></thead>
+    <tbody>
+      {% for s in students %}
+      <tr>
+        <td>{{ s.full_name }}</td>
+        <td>{{ s.username }}</td>
+        <td>{% for en in s.enrollments %}<span class="badge text-bg-secondary">{{ en.classroom.name }}</span> {% endfor %}</td>
+        <td>
+          <form method="post" action="{{ url_for('enroll_student', student_id=s.id) }}" class="d-flex gap-2">
+            <select name="class_id" class="form-select form-select-sm">
+            {% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+            </select>
+            <button class="btn btn-sm btn-primary">Enroll</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

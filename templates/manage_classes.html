@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Manage Classes</h2>
+<div class="card p-3 mb-3">
+  <form method="post" class="row g-2">
+    <div class="col-md-3"><input name="name" class="form-control" placeholder="Class Name" required></div>
+    <div class="col-md-2"><input name="slug" class="form-control" placeholder="Slug" required></div>
+    <div class="col-md-4"><input name="description" class="form-control" placeholder="Description" required></div>
+    <div class="col-md-2"><input type="color" name="color" class="form-control form-control-color" value="#4f46e5"></div>
+    <div class="col-md-1"><button class="btn btn-primary">Add</button></div>
+  </form>
+</div>
+<table class="table table-striped bg-white rounded">
+  <thead><tr><th>Name</th><th>Slug</th><th>Students</th></tr></thead>
+  <tbody>
+    {% for class in classes %}
+      <tr><td>{{ class.name }}</td><td>{{ class.slug }}</td><td>{{ class.enrollments|length }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
