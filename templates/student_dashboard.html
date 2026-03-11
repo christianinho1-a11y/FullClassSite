@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if preview_mode %}
+<div class="alert alert-warning">Preview Mode: viewing as {{ preview_student.full_name }}. <a href="{{ url_for('end_preview') }}">Return to teacher view</a>.</div>
+{% endif %}
+<h2>{% if preview_mode %}Student Preview{% else %}Welcome, {{ current_user.full_name }}{% endif %}</h2>
+<div class="row g-3 mb-4">
+  <div class="col-md-4"><div class="card metric p-3"><small>Enrolled Classes</small><h3>{{ classes|length }}</h3></div></div>
+  <div class="col-md-4"><div class="card metric p-3"><small>Upcoming Assignments</small><h3>{{ upcoming|length }}</h3></div></div>
+  <div class="col-md-4"><div class="card metric p-3"><small>Missing Work</small><h3>{{ missing }}</h3></div></div>
+</div>
+<div class="row g-3 mb-4">
+{% for c in classes %}
+<div class="col-md-6 col-xl-4">
+  <a href="{{ url_for('class_portal', slug=c.slug) }}" class="text-decoration-none"><div class="card p-3 class-card"><h5>{{ c.course_name }}</h5><div class="small text-muted">{{ c.section_label }}</div></div></a>
+</div>
+{% endfor %}
+</div>
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card p-3"><h5>Announcements</h5>{% for a in announcements %}<div class="border-bottom py-2 small"><b>{{ a.title }}</b><br>{{ a.classroom.course_name }} {{ a.classroom.section_label }}</div>{% endfor %}</div></div>
+  <div class="col-lg-6"><div class="card p-3"><h5>Upcoming</h5>{% for a in upcoming %}<div class="border-bottom py-2 small"><b>{{ a.title }}</b><br>Due {{ a.due_date }} • {{ a.category }}</div>{% endfor %}</div></div>
+</div>
+{% endblock %}
