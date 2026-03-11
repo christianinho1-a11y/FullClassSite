@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title or 'SteelClass Portal' }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  {% if current_user.is_authenticated %}
+  <div class="app-shell d-flex">
+    <aside class="sidebar p-3">
+      <h4>SteelClass</h4>
+      <p class="small text-muted">Engineering Classroom Control Panel</p>
+      <nav class="nav flex-column gap-2 mb-4">
+        {% if current_user.role == 'teacher' %}
+        <a class="nav-link" href="{{ url_for('teacher_dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a class="nav-link" href="{{ url_for('manage_classes') }}"><i class="bi bi-grid-3x2-gap"></i> Classes & Sections</a>
+        <a class="nav-link" href="{{ url_for('manage_students') }}"><i class="bi bi-people"></i> Students</a>
+        {% if session.get('preview_student_id') %}
+        <a class="nav-link" href="{{ url_for('student_preview') }}"><i class="bi bi-eye"></i> Preview Mode</a>
+        <a class="nav-link" href="{{ url_for('end_preview') }}"><i class="bi bi-eye-slash"></i> Exit Preview</a>
+        {% endif %}
+        {% else %}
+        <a class="nav-link" href="{{ url_for('student_dashboard') }}"><i class="bi bi-house"></i> My Dashboard</a>
+        {% endif %}
+        <a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a>
+      </nav>
+      <button id="themeToggle" class="btn btn-outline-light btn-sm w-100">Toggle Theme</button>
+    </aside>
+    <main class="main-content p-4">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, msg in messages %}
+      <div class="alert alert-{{ category }}">{{ msg }}</div>
+      {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% else %}
+  {% block auth_content %}{% endblock %}
+  {% endif %}
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
