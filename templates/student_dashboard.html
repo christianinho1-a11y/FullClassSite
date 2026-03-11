@@ -6,18 +6,23 @@
 <h2>{% if preview_mode %}Student Preview{% else %}Welcome, {{ current_user.full_name }}{% endif %}</h2>
 <div class="row g-3 mb-4">
   <div class="col-md-4"><div class="card metric p-3"><small>Enrolled Classes</small><h3>{{ classes|length }}</h3></div></div>
-  <div class="col-md-4"><div class="card metric p-3"><small>Upcoming Assignments</small><h3>{{ upcoming|length }}</h3></div></div>
+  <div class="col-md-4"><div class="card metric p-3"><small>Upcoming Assignments</small><h3>{{ up_total }}</h3></div></div>
   <div class="col-md-4"><div class="card metric p-3"><small>Missing Work</small><h3>{{ missing }}</h3></div></div>
 </div>
 <div class="row g-3 mb-4">
 {% for c in classes %}
-<div class="col-md-6 col-xl-4">
-  <a href="{{ url_for('class_portal', slug=c.slug) }}" class="text-decoration-none"><div class="card p-3 class-card"><h5>{{ c.course_name }}</h5><div class="small text-muted">{{ c.section_label }}</div></div></a>
-</div>
+<div class="col-md-6 col-xl-4"><a href="{{ url_for('class_portal', slug=c.slug) }}" class="text-decoration-none"><div class="card p-3 class-card"><h5>{{ c.course_name }}</h5><div class="small text-muted">{{ c.section_label }}</div></div></a></div>
 {% endfor %}
 </div>
+<div class="card p-3 mb-3">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-3"><label class="small text-muted">Start date</label><input type="date" name="start_date" value="{{ request.args.get('start_date','') }}" class="form-control form-control-sm"></div>
+    <div class="col-md-3"><label class="small text-muted">End date</label><input type="date" name="end_date" value="{{ request.args.get('end_date','') }}" class="form-control form-control-sm"></div>
+    <div class="col-md-2"><button class="btn btn-sm btn-outline-light">Filter</button></div>
+  </form>
+</div>
 <div class="row g-3">
-  <div class="col-lg-6"><div class="card p-3"><h5>Announcements</h5>{% for a in announcements %}<div class="border-bottom py-2 small"><b>{{ a.title }}</b><br>{{ a.classroom.course_name }} {{ a.classroom.section_label }}</div>{% endfor %}</div></div>
-  <div class="col-lg-6"><div class="card p-3"><h5>Upcoming</h5>{% for a in upcoming %}<div class="border-bottom py-2 small"><b>{{ a.title }}</b><br>Due {{ a.due_date }} • {{ a.category }}</div>{% endfor %}</div></div>
+  <div class="col-lg-6"><div class="card p-3"><h5>Announcements</h5><div class="small text-muted mb-2">Showing {{ announcements|length }} of {{ ann_total }} most recent</div>{% for a in announcements %}<div class="border-bottom py-2 small"><b>{{ a.title }}</b><br>{{ a.classroom.course_name }} {{ a.classroom.section_label }}</div>{% endfor %}<div class="d-flex gap-2 mt-2">{% if ann_page>1 %}<a class="btn btn-sm btn-outline-light" href="{{ url_for(request.endpoint, ann_page=ann_page-1, up_page=up_page, start_date=request.args.get('start_date'), end_date=request.args.get('end_date')) }}">Previous</a>{% endif %}{% if ann_page<ann_pages %}<a class="btn btn-sm btn-outline-light" href="{{ url_for(request.endpoint, ann_page=ann_page+1, up_page=up_page, start_date=request.args.get('start_date'), end_date=request.args.get('end_date')) }}">Next</a>{% endif %}<span class="small text-muted ms-auto">Page {{ ann_page }}/{{ ann_pages }}</span></div></div></div>
+  <div class="col-lg-6"><div class="card p-3"><h5>Upcoming</h5><div class="small text-muted mb-2">Showing {{ upcoming|length }} of {{ up_total }}</div>{% for a in upcoming %}<div class="border-bottom py-2 small"><b>{{ a.title }}</b><br>Due {{ a.due_date }} • {{ a.category }}</div>{% endfor %}<div class="d-flex gap-2 mt-2">{% if up_page>1 %}<a class="btn btn-sm btn-outline-light" href="{{ url_for(request.endpoint, up_page=up_page-1, ann_page=ann_page, start_date=request.args.get('start_date'), end_date=request.args.get('end_date')) }}">Previous</a>{% endif %}{% if up_page<up_pages %}<a class="btn btn-sm btn-outline-light" href="{{ url_for(request.endpoint, up_page=up_page+1, ann_page=ann_page, start_date=request.args.get('start_date'), end_date=request.args.get('end_date')) }}">Next</a>{% endif %}<span class="small text-muted ms-auto">Page {{ up_page }}/{{ up_pages }}</span></div><a class="small" href="{{ url_for(request.endpoint, up_page=1, start_date='1900-01-01', end_date='2999-12-31') }}">View All</a></div></div>
 </div>
 {% endblock %}

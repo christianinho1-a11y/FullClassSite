@@ -12,45 +12,21 @@
 
 <div class="row g-3 mb-4">
 {% for row in class_rows %}
-<div class="col-lg-4 col-md-6">
-  <div class="card p-3 class-card">
-    <h5>{{ row.classroom.course_name }}</h5>
-    <div class="small text-muted mb-2">{{ row.classroom.section_label }} • {{ row.classroom.enrollments|length }} students</div>
-    <div class="small">Weighted Avg: <b>{{ row.avg }}%</b></div>
-    <a class="btn btn-sm btn-outline-light mt-2" href="{{ url_for('class_portal', slug=row.classroom.slug) }}">Open Portal</a>
-  </div>
-</div>
+<div class="col-lg-4 col-md-6"><div class="card p-3 class-card"><h5>{{ row.classroom.course_name }}</h5><div class="small text-muted mb-2">{{ row.classroom.section_label }} • {{ row.classroom.enrollments|length }} students</div><div class="small">Weighted Avg: <b>{{ row.avg }}%</b></div><a class="btn btn-sm btn-outline-light mt-2" href="{{ url_for('class_portal', slug=row.classroom.slug) }}">Open Portal</a></div></div>
 {% endfor %}
 </div>
 
+<div class="card p-3 mb-3">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-3"><label class="small text-muted">Due start</label><input type="date" name="due_start" value="{{ request.args.get('due_start','') }}" class="form-control form-control-sm"></div>
+    <div class="col-md-3"><label class="small text-muted">Due end</label><input type="date" name="due_end" value="{{ request.args.get('due_end','') }}" class="form-control form-control-sm"></div>
+    <div class="col-md-2"><button class="btn btn-sm btn-outline-light">Filter Dates</button></div>
+  </form>
+</div>
+
 <div class="row g-3">
-  <div class="col-lg-4">
-    <div class="card p-3">
-      <h5>Quick Actions</h5>
-      <ul class="small">
-        <li>Quick create assignment + announcement</li>
-        <li>Student preview mode</li>
-        <li>Section-aware assignment duplication</li>
-        <li>Export gradebook placeholder</li>
-        <li>Parent contact log placeholder</li>
-      </ul>
-    </div>
-  </div>
-  <div class="col-lg-4">
-    <div class="card p-3">
-      <h5>Upcoming Due Dates</h5>
-      {% for item in upcoming %}
-      <div class="border-bottom py-2 small"><b>{{ item.title }}</b><br>{{ item.classroom.course_name }} {{ item.classroom.section_label }} • {{ item.due_date }}</div>
-      {% endfor %}
-    </div>
-  </div>
-  <div class="col-lg-4">
-    <div class="card p-3">
-      <h5>Recent Activity</h5>
-      {% for item in activity %}
-      <div class="border-bottom py-2 small"><b>{{ item.title }}</b><br>{{ item.classroom.course_name }} {{ item.classroom.section_label }}</div>
-      {% endfor %}
-    </div>
-  </div>
+  <div class="col-lg-4"><div class="card p-3"><h5>Upcoming Due Dates</h5><div class="small text-muted mb-2">Showing {{ upcoming|length }} of {{ upcoming_total }}</div>{% for item in upcoming %}<div class="border-bottom py-2 small"><b>{{ item.title }}</b><br>{{ item.classroom.course_name }} {{ item.classroom.section_label }} • {{ item.due_date }}</div>{% endfor %}<div class="d-flex gap-2 mt-2">{% if upcoming_page>1 %}<a class="btn btn-sm btn-outline-light" href="{{ url_for('teacher_dashboard', upcoming_page=upcoming_page-1, recent_page=recent_page, activity_page=activity_page, due_start=request.args.get('due_start'), due_end=request.args.get('due_end')) }}">Previous</a>{% endif %}{% if upcoming_page<upcoming_pages %}<a class="btn btn-sm btn-outline-light" href="{{ url_for('teacher_dashboard', upcoming_page=upcoming_page+1, recent_page=recent_page, activity_page=activity_page, due_start=request.args.get('due_start'), due_end=request.args.get('due_end')) }}">Next</a>{% endif %}<span class="small text-muted ms-auto">Page {{ upcoming_page }}/{{ upcoming_pages }}</span></div><a class="small" href="{{ url_for('teacher_dashboard', upcoming_page=1, due_start='1900-01-01', due_end='2999-12-31') }}">View All</a></div></div>
+  <div class="col-lg-4"><div class="card p-3"><h5>Recent Activity</h5><div class="small text-muted mb-2">Showing {{ activity|length }} of {{ activity_total }}</div>{% for item in activity %}<div class="border-bottom py-2 small"><b>{{ item.title }}</b><br>{{ item.classroom.course_name }} {{ item.classroom.section_label }}</div>{% endfor %}<div class="d-flex gap-2 mt-2">{% if activity_page>1 %}<a class="btn btn-sm btn-outline-light" href="{{ url_for('teacher_dashboard', activity_page=activity_page-1, recent_page=recent_page, upcoming_page=upcoming_page, due_start=request.args.get('due_start'), due_end=request.args.get('due_end')) }}">Previous</a>{% endif %}{% if activity_page<activity_pages %}<a class="btn btn-sm btn-outline-light" href="{{ url_for('teacher_dashboard', activity_page=activity_page+1, recent_page=recent_page, upcoming_page=upcoming_page, due_start=request.args.get('due_start'), due_end=request.args.get('due_end')) }}">Next</a>{% endif %}<span class="small text-muted ms-auto">Page {{ activity_page }}/{{ activity_pages }}</span></div></div></div>
+  <div class="col-lg-4"><div class="card p-3"><h5>Recent Submissions</h5><div class="small text-muted mb-2">Showing {{ recent|length }} of {{ recent_total }}</div>{% for g in recent %}<div class="border-bottom py-2 small"><b>{{ g.student.full_name }}</b><br>{{ g.assignment.title }} • {{ g.score }}/{{ g.max_score }}</div>{% endfor %}<div class="d-flex gap-2 mt-2">{% if recent_page>1 %}<a class="btn btn-sm btn-outline-light" href="{{ url_for('teacher_dashboard', recent_page=recent_page-1, activity_page=activity_page, upcoming_page=upcoming_page, due_start=request.args.get('due_start'), due_end=request.args.get('due_end')) }}">Previous</a>{% endif %}{% if recent_page<recent_pages %}<a class="btn btn-sm btn-outline-light" href="{{ url_for('teacher_dashboard', recent_page=recent_page+1, activity_page=activity_page, upcoming_page=upcoming_page, due_start=request.args.get('due_start'), due_end=request.args.get('due_end')) }}">Next</a>{% endif %}<span class="small text-muted ms-auto">Page {{ recent_page }}/{{ recent_pages }}</span></div></div></div>
 </div>
 {% endblock %}

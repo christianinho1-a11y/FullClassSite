@@ -11,6 +11,11 @@
   <h5>Teacher Tools</h5>
   <div class="d-flex flex-wrap gap-2">
     <form method="get" action="{{ url_for('class_portal', slug=classroom.slug) }}" class="d-flex gap-2">
+      <input type="date" name="start_date" value="{{ request.args.get('start_date','') }}" class="form-control form-control-sm">
+      <input type="date" name="end_date" value="{{ request.args.get('end_date','') }}" class="form-control form-control-sm">
+      <button class="btn btn-sm btn-outline-light">Jump to Date</button>
+    </form>
+    <form method="get" action="{{ url_for('class_portal', slug=classroom.slug) }}" class="d-flex gap-2">
       <select name="student" class="form-select form-select-sm"><option value="">All students</option>{% for s in roster %}<option value="{{ s.id }}">{{ s.full_name }}</option>{% endfor %}</select>
       <select name="grade_status" class="form-select form-select-sm"><option value="">All grades</option><option value="failing">Failing only</option></select>
       <select name="category" class="form-select form-select-sm"><option value="">All categories</option><option>Projects</option><option>Classwork</option></select>
@@ -40,7 +45,7 @@
       <div class="col-md-4"><button class="btn btn-sm btn-primary">Post</button></div>
     </form>
     {% endif %}
-    {% for a in announcements[:12] %}<div class="border-bottom py-2 small"><b>{{ a.title }}</b> {% if a.pinned %}<span class="badge bg-secondary">Pinned</span>{% endif %}<br>{{ a.message }}</div>{% endfor %}
+    <div class="small text-muted mb-2">Showing {{ announcements|length }} of {{ ann_total }} most recent announcements</div>{% for a in announcements %}<div class="border-bottom py-2 small"><b>{{ a.title }}</b> {% if a.pinned %}<span class="badge bg-secondary">Pinned</span>{% endif %}<br>{{ a.message }}</div>{% endfor %}<div class="d-flex gap-2 mt-2">{% if ann_page>1 %}<a class="btn btn-sm btn-outline-light" href="{{ url_for('class_portal', slug=classroom.slug, ann_page=ann_page-1, assign_page=assign_page, start_date=request.args.get('start_date'), end_date=request.args.get('end_date'), category=request.args.get('category'), student=request.args.get('student'), grade_status=request.args.get('grade_status')) }}">Previous</a>{% endif %}{% if ann_page<ann_pages %}<a class="btn btn-sm btn-outline-light" href="{{ url_for('class_portal', slug=classroom.slug, ann_page=ann_page+1, assign_page=assign_page, start_date=request.args.get('start_date'), end_date=request.args.get('end_date'), category=request.args.get('category'), student=request.args.get('student'), grade_status=request.args.get('grade_status')) }}">Next</a>{% endif %}<span class="small text-muted ms-auto">Page {{ ann_page }}/{{ ann_pages }}</span></div>
   </div></div>
 
   <div class="col-xl-6"><div class="card p-3 h-100"><h5>Assignments</h5>
@@ -63,7 +68,7 @@
       <div class="col-md-2"><button class="btn btn-sm btn-primary">Create</button></div>
     </form>
     {% endif %}
-    {% for a in assignments[:18] %}
+    <div class="small text-muted mb-2">Showing {{ assignments|length }} of {{ assign_total }} assignments</div>{% for a in assignments %}
       <div class="border-bottom py-2 small">
         <b>{{ a.title }}</b> <span class="badge bg-dark border">{{ a.category }}</span> <span class="badge bg-dark border">{{ a.status }}</span><br>
         Due {{ a.due_date }} • {{ a.points_possible }} pts
@@ -79,7 +84,7 @@
         </form>
         {% endif %}
       </div>
-    {% endfor %}
+    {% endfor %}<div class="d-flex gap-2 mt-2">{% if assign_page>1 %}<a class="btn btn-sm btn-outline-light" href="{{ url_for('class_portal', slug=classroom.slug, assign_page=assign_page-1, ann_page=ann_page, start_date=request.args.get('start_date'), end_date=request.args.get('end_date'), category=request.args.get('category'), student=request.args.get('student'), grade_status=request.args.get('grade_status')) }}">Previous</a>{% endif %}{% if assign_page<assign_pages %}<a class="btn btn-sm btn-outline-light" href="{{ url_for('class_portal', slug=classroom.slug, assign_page=assign_page+1, ann_page=ann_page, start_date=request.args.get('start_date'), end_date=request.args.get('end_date'), category=request.args.get('category'), student=request.args.get('student'), grade_status=request.args.get('grade_status')) }}">Next</a>{% endif %}<span class="small text-muted ms-auto">Page {{ assign_page }}/{{ assign_pages }}</span></div><a class="small" href="{{ url_for('class_portal', slug=classroom.slug, assign_page=1, start_date='1900-01-01', end_date='2999-12-31') }}">View All</a>
   </div></div>
 </div>
 
@@ -118,7 +123,7 @@
     {% endif %}
     {% for r in resources %}<div class="border-bottom py-1 small"><b>{{ r.title }}</b> ({{ r.kind }} • {{ r.unit }}) <a href="{{ r.link }}" target="_blank">Open</a></div>{% endfor %}
     <hr>
-    {% for s in roster[:16] %}<span class="badge bg-dark border me-1 mb-1">{{ s.avatar }} {{ s.full_name }}</span>{% endfor %}
+    {% if current_user.role == "teacher" and not preview_mode %}{% for s in roster[:16] %}<span class="badge bg-dark border me-1 mb-1">{{ s.avatar }} {{ s.full_name }}</span>{% endfor %}{% else %}<div class="small text-muted">Roster is private. Students can only view their own progress.</div>{% endif %}
   </div></div>
 </div>
 {% endblock %}

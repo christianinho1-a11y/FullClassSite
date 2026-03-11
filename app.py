@@ -199,6 +199,25 @@ def is_enrolled(student_id: int, class_id: int) -> bool:
     return Enrollment.query.filter_by(student_id=student_id, class_id=class_id).first() is not None
 
 
+
+
+def parse_date(value: str | None) -> date | None:
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def paginate_query(query, page: int, per_page: int = 5):
+    total = query.count()
+    pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page, pages))
+    items = query.offset((page - 1) * per_page).limit(per_page).all()
+    return items, total, pages, page
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "change-me-in-production"
@@ -248,10 +267,21 @@ def create_app() -> Flask:
             avgs = [weighted_breakdown(sid, c)["weighted"] for sid in student_ids]
             class_rows.append({"classroom": c, "avg": round(sum(avgs) / len(avgs), 1) if avgs else 0})
 
-        recent = Grade.query.order_by(Grade.updated_at.desc()).limit(10).all()
-        upcoming = Assignment.query.filter(Assignment.due_date >= date.today(), Assignment.status == "Published").order_by(Assignment.due_date).limit(10).all()
-        activity = Announcement.query.order_by(Announcement.created_at.desc()).limit(8).all()
-        return render_template("teacher_dashboard.html", classes=classes, class_rows=class_rows, total_students=total_students, missing_count=missing_count, queue_to_grade=queue_to_grade, at_risk=at_risk, recent=recent, upcoming=upcoming, activity=activity)
+        due_start = parse_date(request.args.get("due_start"))
+        due_end = parse_date(request.args.get("due_end"))
+        activity_q = Announcement.query.order_by(Announcement.created_at.desc())
+        upcoming_q = Assignment.query.filter(Assignment.status == "Published").order_by(Assignment.due_date.asc())
+        recent_q = Grade.query.order_by(Grade.updated_at.desc())
+        if due_start:
+            upcoming_q = upcoming_q.filter(Assignment.due_date >= due_start)
+        if due_end:
+            upcoming_q = upcoming_q.filter(Assignment.due_date <= due_end)
+
+        activity, activity_total, activity_pages, activity_page = paginate_query(activity_q, request.args.get("activity_page", 1, type=int), 5)
+        upcoming, upcoming_total, upcoming_pages, upcoming_page = paginate_query(upcoming_q, request.args.get("upcoming_page", 1, type=int), 5)
+        recent, recent_total, recent_pages, recent_page = paginate_query(recent_q, request.args.get("recent_page", 1, type=int), 5)
+
+        return render_template("teacher_dashboard.html", classes=classes, class_rows=class_rows, total_students=total_students, missing_count=missing_count, queue_to_grade=queue_to_grade, at_risk=at_risk, recent=recent, upcoming=upcoming, activity=activity, activity_total=activity_total, activity_pages=activity_pages, activity_page=activity_page, upcoming_total=upcoming_total, upcoming_pages=upcoming_pages, upcoming_page=upcoming_page, recent_total=recent_total, recent_pages=recent_pages, recent_page=recent_page)
 
     @app.route("/student")
     @login_required
@@ -259,10 +289,18 @@ def create_app() -> Flask:
     def student_dashboard():
         classes = [en.classroom for en in current_user.enrollments if not en.classroom.archived]
         class_ids = [c.id for c in classes]
-        announcements = Announcement.query.filter(Announcement.class_id.in_(class_ids)).order_by(Announcement.pinned.desc(), Announcement.created_at.desc()).limit(8).all() if class_ids else []
-        upcoming = Assignment.query.filter(Assignment.class_id.in_(class_ids), Assignment.due_date >= date.today(), Assignment.status == "Published", Assignment.release_date <= date.today()).order_by(Assignment.due_date).limit(10).all() if class_ids else []
+        announcements_q = Announcement.query.filter(Announcement.class_id.in_(class_ids)).order_by(Announcement.pinned.desc(), Announcement.created_at.desc()) if class_ids else None
+        upcoming_q = Assignment.query.filter(Assignment.class_id.in_(class_ids), Assignment.status == "Published", Assignment.release_date <= date.today()).order_by(Assignment.due_date) if class_ids else None
+        sd = parse_date(request.args.get("start_date"))
+        ed = parse_date(request.args.get("end_date"))
+        if sd and upcoming_q is not None:
+            upcoming_q = upcoming_q.filter(Assignment.due_date >= sd)
+        if ed and upcoming_q is not None:
+            upcoming_q = upcoming_q.filter(Assignment.due_date <= ed)
+        announcements, ann_total, ann_pages, ann_page = paginate_query(announcements_q, request.args.get("ann_page", 1, type=int), 5) if announcements_q is not None else ([], 0, 1, 1)
+        upcoming, up_total, up_pages, up_page = paginate_query(upcoming_q, request.args.get("up_page", 1, type=int), 5) if upcoming_q is not None else ([], 0, 1, 1)
         missing = Grade.query.join(Assignment).filter(Grade.student_id == current_user.id, Grade.missing.is_(True), Assignment.class_id.in_(class_ids)).count() if class_ids else 0
-        return render_template("student_dashboard.html", classes=classes, announcements=announcements, upcoming=upcoming, missing=missing)
+        return render_template("student_dashboard.html", classes=classes, announcements=announcements, upcoming=upcoming, missing=missing, ann_total=ann_total, ann_pages=ann_pages, ann_page=ann_page, up_total=up_total, up_pages=up_pages, up_page=up_page)
 
     @app.route("/teacher/preview/<int:student_id>")
     @login_required
@@ -286,9 +324,11 @@ def create_app() -> Flask:
         student = User.query.get_or_404(sid)
         classes = [en.classroom for en in student.enrollments if not en.classroom.archived]
         class_ids = [c.id for c in classes]
-        announcements = Announcement.query.filter(Announcement.class_id.in_(class_ids)).order_by(Announcement.created_at.desc()).limit(6).all() if class_ids else []
-        upcoming = Assignment.query.filter(Assignment.class_id.in_(class_ids), Assignment.due_date >= date.today(), Assignment.status == "Published", Assignment.release_date <= date.today()).order_by(Assignment.due_date).limit(8).all() if class_ids else []
-        return render_template("student_dashboard.html", classes=classes, announcements=announcements, upcoming=upcoming, missing=0, preview_mode=True, preview_student=student)
+        announcements_q = Announcement.query.filter(Announcement.class_id.in_(class_ids)).order_by(Announcement.created_at.desc()) if class_ids else None
+        upcoming_q = Assignment.query.filter(Assignment.class_id.in_(class_ids), Assignment.status == "Published", Assignment.release_date <= date.today()).order_by(Assignment.due_date) if class_ids else None
+        announcements, ann_total, ann_pages, ann_page = paginate_query(announcements_q, request.args.get("ann_page", 1, type=int), 5) if announcements_q is not None else ([],0,1,1)
+        upcoming, up_total, up_pages, up_page = paginate_query(upcoming_q, request.args.get("up_page", 1, type=int), 5) if upcoming_q is not None else ([],0,1,1)
+        return render_template("student_dashboard.html", classes=classes, announcements=announcements, upcoming=upcoming, missing=0, preview_mode=True, preview_student=student, ann_total=ann_total, ann_pages=ann_pages, ann_page=ann_page, up_total=up_total, up_pages=up_pages, up_page=up_page)
 
     @app.route("/class/<slug>")
     @login_required
@@ -304,13 +344,23 @@ def create_app() -> Flask:
         if current_user.role == "student" and not is_enrolled(current_user.id, classroom.id):
             return redirect(url_for("student_dashboard"))
 
-        announcements = Announcement.query.filter_by(class_id=classroom.id).order_by(Announcement.pinned.desc(), Announcement.created_at.desc()).all()
+        announcements_q = Announcement.query.filter_by(class_id=classroom.id).order_by(Announcement.pinned.desc(), Announcement.created_at.desc())
         assignments_q = Assignment.query.filter_by(class_id=classroom.id)
         if current_user.role == "student" or preview_student:
             assignments_q = assignments_q.filter(Assignment.status == "Published", Assignment.release_date <= date.today())
         if request.args.get("category") in ["Projects", "Classwork"]:
             assignments_q = assignments_q.filter_by(category=request.args.get("category"))
-        assignments = assignments_q.order_by(Assignment.due_date).all()
+        start_date = parse_date(request.args.get("start_date"))
+        end_date = parse_date(request.args.get("end_date"))
+        if start_date:
+            assignments_q = assignments_q.filter(Assignment.due_date >= start_date)
+            announcements_q = announcements_q.filter(Announcement.created_at >= datetime.combine(start_date, datetime.min.time()))
+        if end_date:
+            assignments_q = assignments_q.filter(Assignment.due_date <= end_date)
+            announcements_q = announcements_q.filter(Announcement.created_at <= datetime.combine(end_date, datetime.max.time()))
+
+        announcements, ann_total, ann_pages, ann_page = paginate_query(announcements_q, request.args.get("ann_page", 1, type=int), 5)
+        assignments, assign_total, assign_pages, assign_page = paginate_query(assignments_q.order_by(Assignment.due_date), request.args.get("assign_page", 1, type=int), 5)
         resources = Resource.query.filter_by(class_id=classroom.id).order_by(Resource.pinned.desc(), Resource.unit, Resource.title).all()
         roster = User.query.join(Enrollment).filter(Enrollment.class_id == classroom.id, User.role == "student").order_by(User.full_name).all()
         gradebook_rows = []
@@ -329,7 +379,7 @@ def create_app() -> Flask:
                 g = Grade.query.filter_by(assignment_id=a.id, student_id=acting_student.id).first()
                 student_grades.append((a, g))
 
-        return render_template("class_portal.html", classroom=classroom, announcements=announcements, assignments=assignments, resources=resources, roster=roster, gradebook_rows=gradebook_rows, student_grades=student_grades, grading_setting=classroom.grading_setting, preview_mode=bool(preview_student), preview_student=preview_student, all_students=User.query.filter_by(role="student").order_by(User.full_name).all())
+        return render_template("class_portal.html", classroom=classroom, announcements=announcements, assignments=assignments, resources=resources, roster=roster if (current_user.role == "teacher" and not preview_student) else [], gradebook_rows=gradebook_rows, student_grades=student_grades, grading_setting=classroom.grading_setting, preview_mode=bool(preview_student), preview_student=preview_student, ann_total=ann_total, ann_pages=ann_pages, ann_page=ann_page, assign_total=assign_total, assign_pages=assign_pages, assign_page=assign_page)
 
     @app.route("/class/<slug>/announcement", methods=["POST"])
     @login_required
