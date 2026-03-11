@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Teacher Dashboard</h2>
+<p class="text-muted">Premium daily workflow for classes, gradebook, and student progress.</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3"><div class="card metric p-3"><small>Total Students</small><h3>{{ total_students }}</h3></div></div>
+  <div class="col-md-3"><div class="card metric p-3"><small>Assignments to Grade</small><h3>{{ queue_to_grade }}</h3></div></div>
+  <div class="col-md-3"><div class="card metric p-3"><small>Missing/Incomplete</small><h3>{{ missing_count }}</h3></div></div>
+  <div class="col-md-3"><div class="card metric p-3"><small>At-Risk Students</small><h3>{{ at_risk }}</h3></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+{% for row in class_rows %}
+<div class="col-lg-4 col-md-6">
+  <div class="card p-3 class-card">
+    <h5>{{ row.classroom.course_name }}</h5>
+    <div class="small text-muted mb-2">{{ row.classroom.section_label }} • {{ row.classroom.enrollments|length }} students</div>
+    <div class="small">Weighted Avg: <b>{{ row.avg }}%</b></div>
+    <a class="btn btn-sm btn-outline-light mt-2" href="{{ url_for('class_portal', slug=row.classroom.slug) }}">Open Portal</a>
+  </div>
+</div>
+{% endfor %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card p-3">
+      <h5>Quick Actions</h5>
+      <ul class="small">
+        <li>Quick create assignment + announcement</li>
+        <li>Student preview mode</li>
+        <li>Section-aware assignment duplication</li>
+        <li>Export gradebook placeholder</li>
+        <li>Parent contact log placeholder</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card p-3">
+      <h5>Upcoming Due Dates</h5>
+      {% for item in upcoming %}
+      <div class="border-bottom py-2 small"><b>{{ item.title }}</b><br>{{ item.classroom.course_name }} {{ item.classroom.section_label }} • {{ item.due_date }}</div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card p-3">
+      <h5>Recent Activity</h5>
+      {% for item in activity %}
+      <div class="border-bottom py-2 small"><b>{{ item.title }}</b><br>{{ item.classroom.course_name }} {{ item.classroom.section_label }}</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
